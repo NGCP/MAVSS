@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <unistd.h>
+#include <termios.h>
 
 #include <serial_port.hpp>
 
@@ -26,6 +27,7 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 	if(!is_connected)
 	{
 		// Throw device connection error
+		throw std::runtime_error("No device connected!");
 	}
 
 	fcntl(fd, F_SETFL, 0);
@@ -35,32 +37,32 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 	}
 
 	// Set input flags
-	config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL |
+	port_config.c_iflag &= ~(IGNBRK | BRKINT | ICRNL |
 		INLCR | PARMRK | INPCK | ISTRIP | IXON);
 	// Set output flags
-	config.c_oflag &= ~(OCRNL | ONLCR | ONLRET |
+	port_config.c_oflag &= ~(OCRNL | ONLCR | ONLRET |
 		ONOCR | OFILL | OPOST);
 
 	#ifdef OLCUC
-		config.c_oflag &= ~OLCUC;
+		port_config.c_oflag &= ~OLCUC;
 	#endif
 
 	#ifdef ONOEOT
-		config.c_oflag &= ~ONOEOT;
+		port_config.c_oflag &= ~ONOEOT;
 	#endif
 
-	config.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
-	config.c_cflag &= ~(CSIZE | PARENB);
-	config.c_cflag |= CS8;
-	config.c_cc[VMIN]  = 1;
-	config.c_cc[VTIME] = 10;
+	port_config.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+	port_config.c_cflag &= ~(CSIZE | PARENB);
+	port_config.c_cflag |= CS8;
+	port_config.c_cc[VMIN]  = 1;
+	port_config.c_cc[VTIME] = 10;
 	
 	// Apply Baudrate
-	switch(baud_rate):
+	switch(baud_rate)
 	{
 		case 1200:
-			config_written =	(cfsetispeed(&config, B1200) < 0 ||
-								cfsetospeed(&config, B1200) < 0) ? false : true;
+			config_written =	(cfsetispeed(&port_config, B1200) < 0 ||
+								cfsetospeed(&port_config, B1200) < 0) ? false : true;
 			break;
 		default:
 			config_written = false;
@@ -72,7 +74,7 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 		// Throw Baud Rate Configuration Error
 	}
 
-	if(tcsetattr(fd, TCSAFLUSH, &config) < 0)
+	if(tcsetattr(fd, TCSAFLUSH, &port_config) < 0)
 	{
 		// Throw Configuration Error
 	}
@@ -80,7 +82,7 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 	is_open = true;
 }
 
-SerialPort::ReadByte()
+uint8_t SerialPort::ReadByte()
 {
 	
 }

@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cstdint>
 
-#include <errors>
-#include <serial_port>
+#include <errors.hpp>
+#include <serial_port.hpp>
 
 int main(int argc, char *argv[])
 {
-	
+	std::cout << "Entered Program!" << std::endl;
 }
