@@ -7,4 +7,5 @@
 int main(int argc, char *argv[])
 {
 	std::cout << "Entered Program!" << std::endl;
+	SerialPort sink;
 }

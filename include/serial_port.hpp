@@ -10,10 +10,9 @@ public:
 	SerialPort();
 	SerialPort(const SerialPort& other) = delete;
 	SerialPort& operator=(const SerialPort&) = delete;
-	~SerialPort();
 
 private:
-	std::mutex guard;
+	std::mutex io_mutex;
 	bool is_open;
 	std::string uart_path;
 	uint32_t baud_rate;
@@ -21,5 +20,5 @@ private:
 
 	void Connect(const std::string& path, uint32_t baud_rate);
 	uint8_t ReadByte();
-	
+	int WriteByte(const std::string& output);
 };

@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <system_error>
 
 #include <serial_port.hpp>
 
@@ -12,10 +13,10 @@ SerialPort::SerialPort()
 {
 	uart_path = kDefaultPath;
 	baud_rate = kDefaultBaudRate;
+	Connect(kDefaultPath, kDefaultBaudRate);
 }
 
 // TODO(kjayakum): Add parameters for parity, I/O bit size & hardware control
-// TODO(kjayakum): Change
 // Note: This function requires POSIX compliant system calls
 void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 {
@@ -26,14 +27,14 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 
 	if(!is_connected)
 	{
-		// Throw device connection error
-		throw std::runtime_error("No device connected!");
+		throw std::system_error(errno, std::system_category());
 	}
 
 	fcntl(fd, F_SETFL, 0);
-	if(tcgetattr(fd, &port_config) < 0)
+	int port_read_result = tcgetattr(fd, &port_config);
+	if(port_read_result < 0)
 	{
-		// Throw cannot read port configuration error
+		throw std::system_error(errno, std::system_category());
 	}
 
 	// Set input flags
@@ -84,5 +85,29 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 
 uint8_t SerialPort::ReadByte()
 {
-	
+	std::lock_guard<std::mutex> lock(io_mutex);
+	uint8_t byte;
+	// Should we handle when read returns 0 (EOF)?
+	bool is_read = read(fd, &byte, 1) < 0 ? false : true;
+
+	if(!is_read)
+	{
+		throw std::system_error(errno, std::system_category());
+	}
+
+	return byte;
+}
+
+int SerialPort::WriteByte(const std::string& output)
+{
+	std::lock_guard<std::mutex> lock(io_mutex);
+	int bytes_written = static_cast<int>(write(fd, output.data(), output.size()));
+	tcdrain(fd);
+
+	if(bytes_written == -1)
+	{
+		throw std::system_error(errno, std::system_category());
+	}
+
+	return bytes_written;
 }
