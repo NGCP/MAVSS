@@ -3,13 +3,12 @@
 #include <termios.h>
 #include <system_error>
 
-#include <serial_port.hpp>
+#include <serial_port_unix.hpp>
 
 const uint32_t kDefaultBaudRate = 57600;
-// TODO(kjayakum): Path names are platform dependent
 const std::string kDefaultPath = "/dev/ttyUSB0";
 
-SerialPort::SerialPort()
+SerialPortUnix::SerialPortUnix()
 {
 	uart_path = kDefaultPath;
 	baud_rate = kDefaultBaudRate;
@@ -18,7 +17,7 @@ SerialPort::SerialPort()
 
 // TODO(kjayakum): Add parameters for parity, I/O bit size & hardware control
 // Note: This function requires POSIX compliant system calls
-void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
+void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate)
 {
 	fd = open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 	struct termios port_config;
@@ -27,14 +26,14 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 
 	if(!is_connected)
 	{
-		throw std::system_error(errno, std::system_category());
+		throw std::system_error(errno, std::system_category(), path);
 	}
 
 	fcntl(fd, F_SETFL, 0);
 	int port_read_result = tcgetattr(fd, &port_config);
 	if(port_read_result < 0)
 	{
-		throw std::system_error(errno, std::system_category());
+		throw std::system_error(errno, std::system_category(), path);
 	}
 
 	// Set input flags
@@ -72,18 +71,18 @@ void SerialPort::Connect(const std::string& path, uint32_t baud_rate)
 
 	if(!config_written)
 	{
-		// Throw Baud Rate Configuration Error
+		throw std::system_error(errno, std::system_category(), path);
 	}
 
 	if(tcsetattr(fd, TCSAFLUSH, &port_config) < 0)
 	{
-		// Throw Configuration Error
+		throw std::system_error(errno, std::system_category(), path);
 	}
 
 	is_open = true;
 }
 
-uint8_t SerialPort::ReadByte()
+uint8_t SerialPortUnix::ReadByte()
 {
 	std::lock_guard<std::mutex> lock(io_mutex);
 	uint8_t byte;
@@ -98,7 +97,7 @@ uint8_t SerialPort::ReadByte()
 	return byte;
 }
 
-int SerialPort::WriteByte(const std::string& output)
+int SerialPortUnix::WriteByte(const std::string& output)
 {
 	std::lock_guard<std::mutex> lock(io_mutex);
 	int bytes_written = static_cast<int>(write(fd, output.data(), output.size()));
