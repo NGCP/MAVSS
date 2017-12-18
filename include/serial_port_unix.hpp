@@ -7,7 +7,7 @@
 class SerialPortUnix : public SerialPortInterface
 {
 public:
-	SerialPortUnix();
+	SerialPortUnix(const std::string& device_path, uint32_t baud_rate);
 	SerialPortUnix(const SerialPortUnix& other) = delete;
 	SerialPortUnix& operator=(const SerialPortUnix&) = delete;
 
