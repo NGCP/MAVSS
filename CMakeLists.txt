@@ -10,27 +10,28 @@ find_package(Threads REQUIRED)
 #include(TestBigEndian)
 
 # Use glob to get the list of all source files.
-file(GLOB_RECURSE LIB_SOURCES "src/*.cpp")
+file(GLOB_RECURSE APP_SOURCES "src/*.cpp")
 
 # Use glob to get the list of all header files.
-file(GLOB_RECURSE LIB_HEADERS "include/*.hpp")
+file(GLOB_RECURSE APP_HEADERS "include/*.hpp")
+file(GLOB_RECURSE LIB_HEADERS "lib/mavlink/*.hpp")
 
 # Project options
 option(BUILD_TESTS				"Build tests."				OFF)
 #option(BUILD_DOCS				"Build documentation."		OFF)
 
 # Project properties
-set(CMAKE_CXX_STANDARD			11)
+set(CMAKE_CXX_STANDARD			14)
 set(CMAKE_CXX_EXTENSIONS		OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED	ON)
 #set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Executable target
-add_executable(${PROJECT_NAME} ${LIB_SOURCES} ${LIB_HEADERS})
+add_executable(${PROJECT_NAME} ${APP_SOURCES} ${APP_HEADERS} ${LIB_HEADERS})
 
 # Library additional folders to include
 target_include_directories(${PROJECT_NAME} PRIVATE "include/")
-#target_include_directories(${PROJECT_NAME}, "lib/mavlink/")
+target_include_directories(${PROJECT_NAME} PRIVATE "lib/mavlink/common/")
 
 # Check build settings
 if(NOT CMAKE_BUILD_TYPE)

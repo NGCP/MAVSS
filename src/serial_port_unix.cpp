@@ -5,18 +5,13 @@
 
 #include <serial_port_unix.hpp>
 
-const uint32_t kDefaultBaudRate = 57600;
-const std::string kDefaultPath = "/dev/ttyUSB0";
-
-SerialPortUnix::SerialPortUnix()
+SerialPortUnix::SerialPortUnix(const std::string& device_path, uint32_t baud_rate)
 {
-	uart_path = kDefaultPath;
-	baud_rate = kDefaultBaudRate;
-	Connect(kDefaultPath, kDefaultBaudRate);
+	uart_path = device_path;
+	this->baud_rate = baud_rate;
+	Connect(uart_path, this->baud_rate);
 }
 
-// TODO(kjayakum): Add parameters for parity, I/O bit size & hardware control
-// Note: This function requires POSIX compliant system calls
 void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate)
 {
 	fd = open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
@@ -57,12 +52,35 @@ void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate)
 	port_config.c_cc[VMIN]  = 1;
 	port_config.c_cc[VTIME] = 10;
 	
-	// Apply Baudrate
 	switch(baud_rate)
 	{
 		case 1200:
 			config_written =	(cfsetispeed(&port_config, B1200) < 0 ||
 								cfsetospeed(&port_config, B1200) < 0) ? false : true;
+			break;
+		case 1800:
+			config_written =	(cfsetispeed(&port_config, B1800) < 0 ||
+								cfsetospeed(&port_config, B1800) < 0) ? false : true;
+			break;
+		case 9600:
+			config_written =	(cfsetispeed(&port_config, B9600) < 0 ||
+								cfsetospeed(&port_config, B9600) < 0) ? false : true;
+			break;
+		case 19200:
+			config_written =	(cfsetispeed(&port_config, B19200) < 0 ||
+								cfsetospeed(&port_config, B19200) < 0) ? false : true;
+			break;
+		case 38400:
+			config_written =	(cfsetispeed(&port_config, B38400) < 0 ||
+								cfsetospeed(&port_config, B38400) < 0) ? false : true;
+			break;
+		case 57600:
+			config_written =	(cfsetispeed(&port_config, B57600) < 0 ||
+								cfsetospeed(&port_config, B57600) < 0) ? false : true;
+			break;
+		case 115200:
+			config_written =	(cfsetispeed(&port_config, B115200) < 0 ||
+								cfsetospeed(&port_config, B115200) < 0) ? false : true;
 			break;
 		default:
 			config_written = false;
@@ -78,15 +96,12 @@ void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate)
 	{
 		throw std::system_error(errno, std::system_category(), path);
 	}
-
-	is_open = true;
 }
 
 uint8_t SerialPortUnix::ReadByte()
 {
 	std::lock_guard<std::mutex> lock(io_mutex);
-	uint8_t byte;
-	// Should we handle when read returns 0 (EOF)?
+	uint8_t byte = 0;
 	bool is_read = read(fd, &byte, 1) < 0 ? false : true;
 
 	if(!is_read)

@@ -5,6 +5,6 @@
 
 int main(int argc, char *argv[])
 {
-	std::cout << "Entered Program!" << std::endl;
-	SerialPortUnix sink;
+	std::cout << "Interactive Demo of MAVSS" << std::endl;
+	SerialPortUnix sink("/dev/ttyUSB0", 57600);
 }
