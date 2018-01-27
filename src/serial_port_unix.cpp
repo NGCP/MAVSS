@@ -5,14 +5,21 @@
 
 #include <serial_port_unix.hpp>
 
-SerialPortUnix::SerialPortUnix(const std::string& device_path, uint32_t baud_rate)
+SerialPortUnix::SerialPortUnix() {}
+
+SerialPortUnix::SerialPortUnix(const std::string& device_path, uint32_t baud_rate,
+ uint8_t data_size, Parity parity, bool single_stop)
 {
 	uart_path = device_path;
 	this->baud_rate = baud_rate;
-	Connect(uart_path, this->baud_rate);
+	this->data_size = data_size;
+	this->parity = parity;
+	this->single_stop = single_stop;
+	Connect(uart_path, this->baud_rate, this->data_size, this->parity, this->single_stop);
 }
 
-void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate)
+void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate,
+ uint8_t data_size, Parity parity, bool single_stop)
 {
 	fd = open(path.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 	struct termios port_config;
@@ -46,9 +53,43 @@ void SerialPortUnix::Connect(const std::string& path, uint32_t baud_rate)
 		port_config.c_oflag &= ~ONOEOT;
 	#endif
 
+	switch(data_size)
+	{
+		case 8: 
+			port_config.c_cflag |= CS8;
+			break;
+		case 7:
+			port_config.c_cflag |= CS7;
+			break;
+		case 6:
+			port_config.c_cflag |= CS6;
+			break;
+		case 5:
+			port_config.c_cflag |= CS5;
+			break;
+		default:
+			throw std::runtime_error("Error: Data size must be 5, 6, 7, or 8\n");
+	}
+
+	if (single_stop == false) {
+			port_config.c_cflag |= CSTOPB;
+	}
+
+	if (parity == Odd) {
+		port_config.c_cflag &= ~(CSIZE | PARENB);
+		port_config.c_cflag |= PARODD;
+	}
+	else if (parity == Even) {
+		port_config.c_cflag &= ~(CSIZE | PARENB);
+	}
+	else if (parity == None) {
+		port_config.c_cflag &= ~CSIZE;
+	}
+	else {
+		throw std::runtime_error("Error: Parity must be None, Even, or Odd\n");
+	}
+
 	port_config.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
-	port_config.c_cflag &= ~(CSIZE | PARENB);
-	port_config.c_cflag |= CS8;
 	port_config.c_cc[VMIN]  = 1;
 	port_config.c_cc[VTIME] = 10;
 	
