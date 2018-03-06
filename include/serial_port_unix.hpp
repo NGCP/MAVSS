@@ -13,7 +13,7 @@ public:
 
 	void Connect(const std::string& path, uint32_t baud_rate);
 	uint8_t ReadByte();
-	int WriteByte(const std::string& output);
+	int WriteString(const std::string& message);
 
 private:
 	std::mutex io_mutex;

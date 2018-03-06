@@ -29,6 +29,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED	ON)
 # Executable target
 add_executable(${PROJECT_NAME} ${APP_SOURCES} ${APP_HEADERS} ${LIB_HEADERS})
 
+target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
+
 # Library additional folders to include
 target_include_directories(${PROJECT_NAME} PRIVATE "include/")
 target_include_directories(${PROJECT_NAME} PRIVATE "lib/mavlink/common/")

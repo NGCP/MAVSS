@@ -112,13 +112,13 @@ uint8_t SerialPortUnix::ReadByte()
 	return byte;
 }
 
-int SerialPortUnix::WriteByte(const std::string& output)
+int SerialPortUnix::WriteString(const std::string& message)
 {
 	std::lock_guard<std::mutex> lock(io_mutex);
-	int bytes_written = static_cast<int>(write(fd, output.data(), output.size()));
+	int bytes_written = static_cast<int>(write(fd, message.data(), message.size()));
 	tcdrain(fd);
 
-	if(bytes_written == -1)
+	if(bytes_written != message.size())
 	{
 		throw std::system_error(errno, std::system_category());
 	}
