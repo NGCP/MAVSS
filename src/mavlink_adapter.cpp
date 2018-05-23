@@ -140,8 +140,8 @@ void MavlinkAdapter::read_messages()
 void write_zero()
 {
 	mavlink_set_position_target_local_ned_t sp;
-	sp.type_mask = MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY &
-				   MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_RATE;
+	sp.type_mask = static_cast<uint16_t>(MAVSetLocalTargetTypeMask::NED_VELOCITY) &
+				   static_cast<uint16_t>(MAVSetLocalTargetTypeMask::NED_YAW_RATE);
 	sp.coordinate_frame = MAV_FRAME_LOCAL_NED;
 	sp.vx				= 0.0;
 	sp.vy				= 0.0;
