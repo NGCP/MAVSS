@@ -137,7 +137,7 @@ void MavlinkAdapter::read_messages()
 }
 
 // This is just a test function to tell the px4 to stay in position
-void write_fixed()
+void write_zero()
 {
 	mavlink_set_position_target_local_ned_t sp;
 	sp.type_mask = MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY &
@@ -162,16 +162,18 @@ void MavlinkAdapter::read_thread()
 	while(!exit)
 	{
 		read_messages();
-		std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // Read batches at 10Hz
+		// Read batches at 10Hz
+		std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 	}
 }
 
 void MavlinkAdapter::write_thread()
 {
+	write_zero();
 	while(!exit)
 	{
-		write_fixed();
-		std::this_thread::sleep_for(std::chrono::milliseconds(66667)) // Write batches at 15Hz
+		// Write batches at 10Hz
+		std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 	}
 }
 
@@ -182,7 +184,7 @@ MavlinkAdapter::MavlinkAdapter(SerialPortInterface& sp)
 
 	// Start connection
 	std::cout << "Starting read thread" << std::endl;
-	read = std::thread(&MavlinkAdapter::read_messages, this);
+	read = std::thread(&MavlinkAdapter::read_thread, this);
 	std::cout << "Starting write thread" << std::endl;
-	write = std::thread(&MavlinkAdapter::write_messages, this);
+	write = std::thread(&MavlinkAdapter::write_thread, this);
 }

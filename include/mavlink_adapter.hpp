@@ -79,6 +79,7 @@ private:
 	SerialPortInterface& serial_port;
 
 	void read_thread();
+	void write_thread();
 	void read_messages();
 	void write_setpoint(mavlink_set_position_target_local_ned_t sp);
 };
